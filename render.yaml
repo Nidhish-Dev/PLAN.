@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: springboot-backend
-    env: java
-    plan: free
+    name: springboot-docker-app
+    env: docker
     rootDir: server
-    buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar target/*.jar"
+    plan: free
+    dockerfilePath: Dockerfile
     autoDeploy: true
+    healthCheckPath: /
