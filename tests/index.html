@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PLAN. Test Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; }
+    .gradient-text { background: linear-gradient(90deg, #00ff88, #00cc66); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .otp-input { letter-spacing: 12px; font-size: 36px; font-weight: 900; background: #111; color: #00ff88; border: 2px solid #333; border-radius: 12px; }
+    .btn-neon { background: #00ff88; color: #000; font-weight: bold; transition: all 0.3s; }
+    .btn-neon:hover { background: #00cc66; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,255,136,0.4); }
+    .priority-URGENT { background: #ff3333; color: white; }
+    .priority-HIGH { background: #ff8833; color: black; }
+    .priority-MEDIUM { background: #ffdd33; color: black; }
+    .priority-LOW { background: #888; color: white; }
+    .status-CREATED { background: #444; }
+    .status-STARTED { background: #0066ff; }
+    .status-IN_PROGRESS { background: #ff8800; }
+    .status-PARTIALLY_COMPLETED { background: #aa00ff; }
+    .status-COMPLETED { background: #00ff88; color: black; font-weight: bold; }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-white">
+
+<div class="container mx-auto p-6 max-w-6xl">
+
+  <div class="text-center mb-10">
+    <h1 class="text-7xl font-black gradient-text">PLAN.</h1>
+    <p class="text-gray-400 text-xl">A Self Project Manager — Full Feature Test</p>
+  </div>
+
+  <!-- Auth Section -->
+  <div id="auth-section" class="bg-gradient-to-br from-[#111] to-[#1a1a1a] rounded-2xl p-8 shadow-2xl border border-gray-800 mb-10">
+    <h2 class="text-3xl font-bold mb-6">Authentication</h2>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+      <div class="bg-[#0a0a0a] p-8 rounded-xl border border-gray-700">
+        <h3 class="text-2xl font-bold mb-6 text-[#00ff88]">Sign Up (Instant Login)</h3>
+        <input id="signup-firstname" placeholder="First Name" class="w-full p-4 mb-4 bg-[#111] border border-gray-600 rounded-lg focus:border-[#00ff88] outline-none"/>
+        <input id="signup-lastname" placeholder="Last Name" class="w-full p-4 mb-4 bg-[#111] border border-gray-600 rounded-lg"/>
+        <input id="signup-email" type="email" placeholder="Email" class="w-full p-4 mb-4 bg-[#111] border border-gray-600 rounded-lg"/>
+        <select id="signup-role" class="w-full p-4 mb-6 bg-[#111] border border-gray-600 rounded-lg">
+          <option>STUDENT</option>
+          <option>PROFESSIONAL</option>
+        </select>
+        <button onclick="requestSignup()" class="w-full btn-neon py-5 rounded-lg text-xl font-bold">Send OTP & Sign Up</button>
+      </div>
+
+      <div class="bg-[#0a0a0a] p-8 rounded-xl border border-gray-700">
+        <h3 class="text-2xl font-bold mb-6 text-[#00ff88]">Verify OTP → Login</h3>
+        <input id="otp-email" type="email" placeholder="Your Email" class="w-full p-4 mb-6 bg-[#111] border border-gray-600 rounded-lg"/>
+        <input id="otp-code" placeholder="------" maxlength="6" class="w-full p-6 text-center otp-input mb-6 text-4xl"/>
+        <div class="grid grid-cols-2 gap-4">
+          <button onclick="verifySignup()" class="btn-neon py-4 rounded-lg text-lg font-bold">Verify Signup</button>
+          <button onclick="requestLoginOtp()" class="bg-gray-700 hover:bg-gray-600 py-4 rounded-lg text-lg">Send Login OTP</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="jwt-display" class="mt-8 p-6 bg-[#00ff88] text-black font-mono text-sm rounded-lg hidden">
+      <strong>JWT Token (30 days):</strong><br/>
+      <span id="jwt-token" class="break-all"></span>
+      <button onclick="copyJwt()" class="mt-3 px-6 py-3 bg-black text-white rounded font-bold">Copy Token</button>
+    </div>
+  </div>
+
+  <!-- Projects Dashboard -->
+  <div id="projects-section" class="hidden">
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-4xl font-black">Your Projects</h2>
+      <button onclick="showCreateForm()" class="btn-neon px-8 py-4 rounded-xl text-xl font-bold">+ New Project</button>
+    </div>
+
+    <!-- Create Project Form -->
+    <div id="create-form" class="bg-[#111] p-8 rounded-2xl border border-gray-700 mb-10 hidden">
+      <h3 class="text-2xl font-bold mb-6 text-[#00ff88]">Create New Project</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <input id="proj-name" placeholder="Project Name" class="w-full p-4 bg-black border border-gray-600 rounded-lg"/>
+        <input id="proj-timeline" placeholder="Timeline (e.g. Dec 2025 - Jan 2026)" class="w-full p-4 bg-black border border-gray-600 rounded-lg"/>
+        <textarea id="proj-desc" placeholder="Description" class="md:col-span-2 w-full p-4 bg-black border border-gray-600 rounded-lg h-32"></textarea>
+      </div>
+
+      <div class="mt-6">
+        <h4 class="text-lg font-bold mb-4">Subtasks</h4>
+        <div id="subtasks-container" class="space-y-4"></div>
+        <button onclick="addSubtaskField()" class="text-[#00ff88] underline text-sm">+ Add Subtask</button>
+      </div>
+
+      <div class="mt-8 flex gap-4">
+        <button onclick="createProject()" class="btn-neon px-8 py-4 rounded-lg text-lg font-bold">Create Project</button>
+        <button onclick="hideCreateForm()" class="bg-gray-700 px-8 py-4 rounded-lg">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Projects List -->
+    <div id="projects-list" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3"></div>
+  </div>
+
+  <div class="mt-16 text-center text-gray-500 text-sm">
+    PLAN. Full Test Client • <span id="status" class="text-[#00ff88]">Ready</span>
+  </div>
+</div>
+
+<script>
+  const API = "http://localhost:8080";
+  let token = localStorage.getItem("plan_jwt") || "";
+  let currentProjectId = null;
+
+  if (token) {
+    document.getElementById("jwt-display").classList.remove("hidden");
+    document.getElementById("jwt-token").textContent = token;
+    document.getElementById("auth-section").classList.add("opacity-50");
+    document.getElementById("projects-section").classList.remove("hidden");
+    loadProjects();
+  }
+
+  function setStatus(msg, success = true) {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.style.color = success ? "#00ff88" : "#ff4444";
+  }
+
+  // Auth Functions
+  async function requestSignup() {
+    const payload = {
+      firstName: document.getElementById("signup-firstname").value,
+      lastName: document.getElementById("signup-lastname").value,
+      email: document.getElementById("signup-email").value,
+      role: document.getElementById("signup-role").value
+    };
+    try {
+      await axios.post(`${API}/api/auth/request-signup`, payload);
+      document.getElementById("otp-email").value = payload.email;
+      setStatus("OTP sent! Check your email.");
+    } catch (e) { setStatus("Error: " + (e.response?.data || e.message), false); }
+  }
+
+  async function verifySignup() {
+    const email = document.getElementById("otp-email").value;
+    const otp = document.getElementById("otp-code").value;
+    try {
+      const res = await axios.post(`${API}/api/auth/verify-signup`, { email, otp });
+      token = res.data;
+      localStorage.setItem("plan_jwt", token);
+      document.getElementById("jwt-token").textContent = token;
+      document.getElementById("jwt-display").classList.remove("hidden");
+      document.getElementById("auth-section").classList.add("opacity-50");
+      document.getElementById("projects-section").classList.remove("hidden");
+      setStatus("Logged in successfully!");
+      loadProjects();
+    } catch (e) { setStatus("Invalid OTP", false); }
+  }
+
+  async function requestLoginOtp() {
+    const email = document.getElementById("otp-email").value;
+    try {
+      await axios.post(`${API}/api/auth/request-login`, { email });
+      setStatus("Login OTP sent!");
+    } catch (e) { setStatus("User not found", false); }
+  }
+
+  function copyJwt() {
+    navigator.clipboard.writeText(token);
+    setStatus("JWT copied!");
+  }
+
+  // Project Functions
+  function showCreateForm() {
+    document.getElementById("create-form").classList.remove("hidden");
+    document.getElementById("subtasks-container").innerHTML = "";
+    addSubtaskField();
+  }
+
+  function hideCreateForm() {
+    document.getElementById("create-form").classList.add("hidden");
+    document.getElementById("proj-name").value = "";
+    document.getElementById("proj-desc").value = "";
+    document.getElementById("proj-timeline").value = "";
+  }
+
+  function addSubtaskField(desc = "", priority = "MEDIUM") {
+    const container = document.getElementById("subtasks-container");
+    const id = Date.now();
+    const div = document.createElement("div");
+    div.className = "flex gap-3 items-center";
+    div.innerHTML = `
+      <input type="text" placeholder="Subtask description" value="${desc}" class="flex-1 p-3 bg-black border border-gray-600 rounded-lg"/>
+      <select class="p-3 bg-black border border-gray-600 rounded-lg">
+        <option value="URGENT" ${priority==="URGENT" ? "selected" : ""}>URGENT</option>
+        <option value="HIGH" ${priority==="HIGH" ? "selected" : ""}>HIGH</option>
+        <option value="MEDIUM" ${priority==="MEDIUM" ? "selected" : ""}>MEDIUM</option>
+        <option value="LOW" ${priority==="LOW" ? "selected" : ""}>LOW</option>
+      </select>
+      <button onclick="this.parentElement.remove()" class="text-red-500">Remove</button>
+    `;
+    container.appendChild(div);
+  }
+
+  async function createProject() {
+    const subtasks = Array.from(document.querySelectorAll("#subtasks-container > div")).map(div => ({
+      description: div.querySelector("input").value,
+      priority: div.querySelector("select").value
+    })).filter(s => s.description.trim());
+
+    const payload = {
+      name: document.getElementById("proj-name").value,
+      description: document.getElementById("proj-desc").value,
+      timeline: document.getElementById("proj-timeline").value,
+      subtasks,
+      status: "STARTED"
+    };
+
+    try {
+      await axios.post(`${API}/api/projects`, payload, { headers: { Authorization: `Bearer ${token}` }});
+      hideCreateForm();
+      loadProjects();
+      setStatus("Project created with subtasks!");
+    } catch (e) { setStatus("Failed to create project", false); }
+  }
+
+  async function loadProjects() {
+    try {
+      const res = await axios.get(`${API}/api/projects`, { headers: { Authorization: `Bearer ${token}` }});
+      const list = document.getElementById("projects-list");
+      list.innerHTML = res.data.map(p => `
+        <div class="bg-gradient-to-br from-[#111] to-[#1a1a1a] p-8 rounded-2xl border border-gray-700">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-2xl font-bold">${p.name}</h3>
+            <span class="px-4 py-2 rounded-full text-xs font-bold status-${p.status}">${p.status.replace(/_/g, " ")}</span>
+          </div>
+          <p class="text-gray-400 mb-4">${p.description || "No description"}</p>
+          <p class="text-sm text-gray-500 mb-6">Timeline: ${p.timeline || "Not set"}</p>
+
+          <div class="space-y-3 mb-6">
+            <h4 class="font-bold text-[#00ff88]">Subtasks</h4>
+            ${p.subtasks.length ? p.subtasks.map(s => `
+              <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded text-xs font-bold priority-${s.priority}">${s.priority}</span>
+                <span class="flex-1">${s.description}</span>
+              </div>
+            `).join("") : "<p class='text-gray-600'>No subtasks</p>"}
+          </div>
+
+          <div class="flex gap-3 flex-wrap">
+            <select onchange="updateStatus('${p.id}', this.value)" class="bg-black border border-gray-600 rounded px-4 py-2 text-sm">
+              <option value="">Change Status</option>
+              <option value="STARTED">STARTED</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="PARTIALLY_COMPLETED">PARTIALLY_COMPLETED</option>
+              <option value="COMPLETED">COMPLETED</option>
+            </select>
+            <button onclick="deleteProject('${p.id}')" class="bg-red-600 px-4 py-2 rounded text-sm font-bold">Delete</button>
+          </div>
+        </div>
+      `).join("");
+    } catch (e) {
+      setStatus("Failed to load projects", false);
+    }
+  }
+
+  async function updateStatus(id, status) {
+    if (!status) return;
+    try {
+      await axios.patch(`${API}/api/projects/${id}/status`, { status }, { headers: { Authorization: `Bearer ${token}` }});
+      loadProjects();
+      setStatus("Status updated!");
+    } catch (e) { setStatus("Update failed", false); }
+  }
+
+  async function deleteProject(id) {
+    if (confirm("Delete this project permanently?")) {
+      await axios.delete(`${API}/api/projects/${id}`, { headers: { Authorization: `Bearer ${token}` }});
+      loadProjects();
+      setStatus("Project deleted");
+    }
+  }
+
+  // OTP input formatting
+  document.getElementById("otp-code").addEventListener("input", e => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0,6);
+  });
+</script>
+
+</body>
+</html>
